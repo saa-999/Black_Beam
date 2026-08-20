@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="BlackBeam.ApiGateway/BlackBeam.ApiGateway.csproj" />
+  <Project Path="BlackBeam.Services.Inventory/BlackBeam.Services.Inventory.csproj" />
+  <Project Path="BlackBeam.Services.Loyalty/BlackBeam.Services.Loyalty.csproj" />
+  <Project Path="BlackBeam.Services.Orders/BlackBeam.Services.Orders.csproj" />
+  <Project Path="BlackBeam.Shared/BlackBeam.Shared.csproj" />
+  <Project Path="Black_Beam/BlackBeam.Services.Identity.csproj" />
+</Solution>
