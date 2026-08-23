@@ -6,6 +6,10 @@ C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\Bla
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\BlackBeam.ApiGateway.runtimeconfig.json
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\BlackBeam.ApiGateway.dll
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\BlackBeam.ApiGateway.pdb
+C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\Microsoft.OpenApi.dll
+C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\System.IO.Hashing.dll
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\bin\Debug\net8.0\Yarp.ReverseProxy.dll
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\BlackBeam.ApiGateway.csproj.AssemblyReference.cache
@@ -14,6 +18,7 @@ C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\Bla
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\BlackBeam.ApiGateway.AssemblyInfoInputs.cache
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\BlackBeam.ApiGateway.AssemblyInfo.cs
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\BlackBeam.ApiGateway.csproj.CoreCompileInputs.cache
+C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\BlackBeam.ApiGateway.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\BlackBeam.ApiGateway.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\rjimswa.dswa.cache.json
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
@@ -24,7 +29,6 @@ C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\sta
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\swae.build.ex.cache
-C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\BlackBea.17BED58C.Up2Date
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\BlackBeam.ApiGateway.dll
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.ApiGateway\obj\Debug\net8.0\refint\BlackBeam.ApiGateway.dll

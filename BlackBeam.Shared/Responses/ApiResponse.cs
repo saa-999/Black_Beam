@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace BlackBeam.Shared.Responses
+﻿namespace BlackBeam.Shared.Responses
 {
-     public class ApiResponse<T>
+    public class ApiResponse<T>
     {
         public bool IsSuccess { get; set; }
         public string? Message { get; set; }
-        public T? Data { get; set;  }
+        public T? Data { get; set; }
 
         public List<string>? Error { get; set; }
 
@@ -26,7 +19,8 @@ namespace BlackBeam.Shared.Responses
             };
         }
 
-        public static ApiResponse<T> Failure(List<string>? error, string? message = "لم تتم العملية !") {
+        public static ApiResponse<T> Failure(List<string>? error, string? message = "لم تتم العملية !")
+        {
 
             return new ApiResponse<T>
             {

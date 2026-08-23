@@ -21,7 +21,6 @@ C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.Services.Orders\obj\Debug\net8.
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.Services.Orders\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.Services.Orders\obj\Debug\net8.0\staticwebassets.build.endpoints.json
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.Services.Orders\obj\Debug\net8.0\swae.build.ex.cache
-C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.Services.Orders\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.Services.Orders\obj\Debug\net8.0\BlackBeam.Services.Orders.dll
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.Services.Orders\obj\Debug\net8.0\refint\BlackBeam.Services.Orders.dll
 C:\Users\sa3od\source\repos\Black_Beam\BlackBeam.Services.Orders\obj\Debug\net8.0\BlackBeam.Services.Orders.pdb
