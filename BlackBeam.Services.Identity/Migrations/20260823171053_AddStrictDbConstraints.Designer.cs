@@ -4,6 +4,7 @@ using BlackBeam.Services.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlackBeam.Services.Identity.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260823171053_AddStrictDbConstraints")]
+    partial class AddStrictDbConstraints
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,8 +54,6 @@ namespace BlackBeam.Services.Identity.Migrations
 
                     b.ToTable("UsersDB", t =>
                         {
-                            t.HasCheckConstraint("CK_User_Name_NotEmpty", "LENGTH(TRIM(Name)) > 0");
-
                             t.HasCheckConstraint("CK_User_PhoneNumber", "LENGTH(PhoneNumber) = 10 AND PhoneNumber LIKE '05%'");
 
                             t.HasCheckConstraint("CK_User_Role", "Role IN ('Admin', 'Cashier', 'Customer')");

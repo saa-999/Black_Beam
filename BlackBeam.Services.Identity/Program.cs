@@ -6,6 +6,7 @@ using System.Text;
 using BlackBeam.Services.Identity.Endpoints;
 using BlackBeam.Services.Identity.Data;
 using  BlackBeam.Services.Identity.Logg;
+using BlackBeam.Services.Identity.Security;
 
 Env.Load();
 
@@ -62,6 +63,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IHashService, HashService>();
 
 var app = builder.Build();
 

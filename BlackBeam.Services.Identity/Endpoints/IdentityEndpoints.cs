@@ -11,6 +11,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BlackBeam.Shared.EnumRole;
+using BlackBeam.Services.Identity.Security;
 
 namespace BlackBeam.Services.Identity.Endpoints
 {
@@ -20,14 +21,15 @@ namespace BlackBeam.Services.Identity.Endpoints
         {
             var group = app.MapGroup("/api/auth");
 
-            group.MapPost("/login", async(LoginRequest req, IConfiguration config, AppDbContext db) =>
+            group.MapPost("/login", async(LoginRequest req, IConfiguration config, AppDbContext db , IHashService hashService) =>
             {
                 if(string.IsNullOrEmpty(req.PhoneNumber) || string.IsNullOrEmpty(req.Password))
                 {
                     return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { "رقم الهاتف أو كلمة المرور فارغة" }, "فشل تسجيل الدخول"));
                 }
              
-                var user = await db.UsersDB.FirstOrDefaultAsync(u => u.PhoneNumber == req.PhoneNumber && u.Password == req.Password);
+                var user = await db.UsersDB.FirstOrDefaultAsync(u => u.PhoneNumber == req.PhoneNumber );
+          
 
                 if (user == null)
                 {
@@ -38,6 +40,17 @@ namespace BlackBeam.Services.Identity.Endpoints
                 if(!user.IsActive)
                 {
                     return Results.Unauthorized();
+                }
+
+               var hash = new HashPassword
+                {
+                    Raw = req.Password,
+                    Hash = user.Password
+                };
+                 hashService.VerifyPassword(hash);
+                if (!hash.IsSucceeded)
+                {
+                     return Results.BadRequest(ApiResponse<string>.Failure(new List<string>{"كلمة المرور او رقم الهاتف غير صحيح !"}));
                 }
 
                 try
@@ -52,26 +65,45 @@ namespace BlackBeam.Services.Identity.Endpoints
                 }
             });
 
-             group.MapPost("/Regist" , async (RegistRequest req  ,IConfiguration config , AppDbContext db) =>
+             group.MapPost("/Regist" , async (RegistRequest req  ,IConfiguration config , AppDbContext db, IHashService hashService) =>
              {
                  if(string.IsNullOrEmpty(req.PhoneNumber) || string.IsNullOrEmpty(req.Password) || string.IsNullOrEmpty(req.Name))
                 {
                     return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { " رقم الهاتف أو كلمة المرور فارغة او الاسم فارغ !!" }, "فشل تسجيل الدخول"));
                 }
-
+                var hash = new HashPassword 
+                {
+                    Raw = req.Password
+                };
+                  hashService.HashPassword(hash);
+                 if (!hash.IsSucceeded)
+                 {
+                      return Results.Unauthorized();
+                 }
                 var user = new ApplicationUser
                 {
                     Name = req.Name,
                     PhoneNumber = req.PhoneNumber,
-                    Password = req.Password,
+                    Password = hash.Hash,
                     Role =  EnumRole.Customer
                 };
 
+                try {
                 await db.UsersDB.AddAsync(user);
                 await db.SaveChangesAsync();
 
                 return Results.Ok(ApiResponse<string>.Success("تم تسجيل المستخدم "));
-
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+                 {
+                     return Results.BadRequest(ApiResponse<string>.Failure(
+                      new List<string> { "البيانات المدخلة غير صالحة أو تخالف شروط النظام." }, 
+                      "فشل في إنشاء الحساب"
+                      ));
+                 }catch (Exception ex)
+                 {
+                     return Results.StatusCode(StatusCodes.Status500InternalServerError);
+                 }
              
              });
           

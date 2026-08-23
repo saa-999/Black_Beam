@@ -1,4 +1,6 @@
 ﻿.env
 .vs/
-obj/
-bin/
+[Bb]in/
+[Oo]bj/
+**/bin/
+**/obj/
