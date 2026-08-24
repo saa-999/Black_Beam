@@ -102,6 +102,47 @@ namespace BlackBeam.Services.Identity.Services
                 return new AuthResult(false, null, "البيانات المدخلة تخالف شروط النظام (مثال: رقم هاتف غير صالح).");
             }
         }
+         public async Task<AuthResult> RegisterCashierAsync(RegisterStaffRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Name) )
+            {
+             return new AuthResult(false, null, "اسم المستخدم، الاسم،   وكلمة المرور حقول إلزامية");
+            }
+            if (await _db.UsersDB.AnyAsync(u => u.Username == request.Username))
+            {
+             return new AuthResult(false, null, "اسم المستخدم محجوز مسبقاً");
+            }
+
+            var hash = new HashPassword { Raw = request.Password };
+            _hashService.HashPassword(hash);
+
+            if (!hash.IsSucceeded)
+            {
+              return new AuthResult(false, null, "فشل في تشفير كلمة المرور");
+            }
+
+            var user = new ApplicationUser
+            {
+             Name = request.Name,
+             Username = request.Username,
+             PhoneNumber = request.PhoneNumber ?? string.Empty, 
+             Password = hash.Hash,
+             Role = EnumRole.Cashier, 
+             IsActive = true
+            };
+
+            try
+            {
+             await _db.UsersDB.AddAsync(user);
+             await _db.SaveChangesAsync();
+             return new AuthResult(true, null, null);
+            }
+              catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+            {
+               return new AuthResult(false, null, "البيانات المدخلة تخالف شروط النظام (تأكد من صيغة رقم الهاتف إذا تم إدخاله).");
+            }
+
+        }
 
      
         private string GenerateJwtToken(ApplicationUser user)

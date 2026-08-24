@@ -34,6 +34,17 @@ namespace BlackBeam.Services.Identity.Endpoints
                 }
                 return Results.Ok(ApiResponse<string>.Success("تم تسجيل المستخدم بنجاح"));
             });
+            group.MapPost("/admin/register-cashier", async (RegisterStaffRequest req, IAuthService authService) =>
+            {
+                var result = await authService.RegisterCashierAsync(req);
+    
+                if (!result.IsSuccess)
+                {
+                   return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { result.ErrorMessage ?? "فشل تسجيل الكاشير" }));
+                }
+    
+                return Results.Ok(ApiResponse<string>.Success("تم إنشاء حساب الكاشير بنجاح"));
+            }) .RequireAuthorization("AdminOnly");
         }
     }
 }

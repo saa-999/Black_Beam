@@ -9,5 +9,6 @@ namespace BlackBeam.Services.Identity.Services
     {
         Task<AuthResult> LoginAsync(LoginRequest request);
         Task<AuthResult> RegisterCustomerAsync(RegistRequest request);
+        Task<AuthResult> RegisterCashierAsync(RegisterStaffRequest request);
     }
 }

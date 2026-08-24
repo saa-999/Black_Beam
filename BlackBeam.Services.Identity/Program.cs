@@ -8,7 +8,7 @@ using BlackBeam.Services.Identity.Data;
 using  BlackBeam.Services.Identity.Logg;
 using BlackBeam.Services.Identity.Security;
 using BlackBeam.Services.Identity.Services;
-
+using BlackBeam.Shared.EnumRole;
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,7 +54,11 @@ AddJwtBearer(opt =>
         OnAuthenticationFailed = JwtSecurityEventsHandler.HandleAuthenticationFailed
     };
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+  options.AddPolicy("AdminOnly", policy => 
+        policy.RequireRole(EnumRole.Admin));
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
