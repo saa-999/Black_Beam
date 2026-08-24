@@ -7,6 +7,7 @@ using BlackBeam.Services.Identity.Endpoints;
 using BlackBeam.Services.Identity.Data;
 using  BlackBeam.Services.Identity.Logg;
 using BlackBeam.Services.Identity.Security;
+using BlackBeam.Services.Identity.Services;
 
 Env.Load();
 

@@ -84,7 +84,7 @@ namespace BlackBeam.Services.Identity.Services
                 Name = request.Name,
                 PhoneNumber = request.PhoneNumber,
                 Password = hash.Hash,
-                Role = Role.Customer 
+                Role = EnumRole.Customer 
             };
 
             try

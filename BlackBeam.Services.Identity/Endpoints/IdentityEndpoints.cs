@@ -1,5 +1,6 @@
 ﻿using BlackBeam.Services.Identity.Services;
 using BlackBeam.Shared.Responses;
+using BlackBeam.Services.Identity.Models;
 
 namespace BlackBeam.Services.Identity.Endpoints
 {
@@ -29,9 +30,9 @@ namespace BlackBeam.Services.Identity.Endpoints
                 return Results.Ok(ApiResponse<string>.Success("تم تسجيل المستخدم بنجاح"));
             });
 
+
             
         }
-     public record LoginRequest(string PhoneNumber, string Password);
-    public record RegistRequest(string PhoneNumber , string Password   , string Name );
+
     }
 }
