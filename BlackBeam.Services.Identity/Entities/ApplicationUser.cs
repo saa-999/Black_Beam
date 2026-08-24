@@ -15,6 +15,7 @@ namespace BlackBeam.Services.Identity.Entities
         [Required(ErrorMessage = "الصلاحية مطلوبة")]
         [RegularExpression("^(Admin|Cashier|Customer)$" , ErrorMessage = "الصلاحية غير صالحة. المسموح فقط: Admin, Cashier, Customer.")]
         public string Role { get; set; } = String.Empty;
+        public string? Username { get; set; }
 
         public bool IsActive { get; set; } = true;
     }

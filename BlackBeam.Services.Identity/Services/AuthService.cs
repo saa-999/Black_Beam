@@ -27,12 +27,16 @@ namespace BlackBeam.Services.Identity.Services
 
         public async Task<AuthResult> LoginAsync(LoginRequest request)
         {
-            if (string.IsNullOrEmpty(request.PhoneNumber) || string.IsNullOrEmpty(request.Password))
+            if (string.IsNullOrEmpty(request.Identifier) || string.IsNullOrEmpty(request.Password))
             {
                 return new AuthResult(false, null, "رقم الهاتف أو كلمة المرور فارغة");
             }
 
-            var user = await _db.UsersDB.FirstOrDefaultAsync(u => u.PhoneNumber == request.PhoneNumber);
+            var user = await _db.UsersDB.FirstOrDefaultAsync( u => 
+
+               (u.Role == EnumRole.Customer && u.PhoneNumber == request.Identifier) || 
+               (u.Role != EnumRole.Customer && u.Username == request.Identifier)
+                );
             
             if (user == null)
             {

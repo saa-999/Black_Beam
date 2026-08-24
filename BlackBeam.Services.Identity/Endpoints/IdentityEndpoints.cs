@@ -1,6 +1,11 @@
 ﻿using BlackBeam.Services.Identity.Services;
 using BlackBeam.Shared.Responses;
 using BlackBeam.Services.Identity.Models;
+using BlackBeam.Services.Identity.Entities;
+using BlackBeam.Services.Identity.Data;
+using BlackBeam.Services.Identity.Security;
+using BlackBeam.Shared.EnumRole;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlackBeam.Services.Identity.Endpoints
 {
@@ -29,10 +34,6 @@ namespace BlackBeam.Services.Identity.Endpoints
                 }
                 return Results.Ok(ApiResponse<string>.Success("تم تسجيل المستخدم بنجاح"));
             });
-
-
-            
         }
-
     }
 }

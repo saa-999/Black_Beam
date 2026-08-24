@@ -14,16 +14,14 @@ namespace BlackBeam.Services.Identity.Data
 
     
         modelBuilder.Entity<ApplicationUser>()
-        .HasCheckConstraint("CK_User_PhoneNumber", "LENGTH(PhoneNumber) = 10 AND PhoneNumber LIKE '05%'");
-    
-   
-         modelBuilder.Entity<ApplicationUser>()
-        .HasCheckConstraint("CK_User_Role", "Role IN ('Admin', 'Cashier', 'Customer')");
-
-        modelBuilder.Entity<ApplicationUser>()
-        .HasCheckConstraint("CK_User_Name_NotEmpty", "LENGTH(TRIM(Name)) > 0");
-         }
-         
+        .ToTable(t => 
+        {
+        t.HasCheckConstraint("CK_User_PhoneNumber", "LENGTH(PhoneNumber) = 10 AND PhoneNumber LIKE '05%'");
+        t.HasCheckConstraint("CK_User_Role", "Role IN ('Admin', 'Cashier', 'Customer')");
+        t.HasCheckConstraint("CK_User_Name_NotEmpty", "LENGTH(TRIM(Name)) > 0");
+        });
+        
+        }
 
         public DbSet<ApplicationUser> UsersDB { get; set; }
 
