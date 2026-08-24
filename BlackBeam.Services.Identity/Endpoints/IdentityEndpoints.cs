@@ -1,17 +1,5 @@
-﻿using BlackBeam.Services.Identity.Data;
-using BlackBeam.Services.Identity.Entities;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
+﻿using BlackBeam.Services.Identity.Services;
 using BlackBeam.Shared.Responses;
-using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using BlackBeam.Shared.EnumRole;
-using BlackBeam.Services.Identity.Security;
 
 namespace BlackBeam.Services.Identity.Endpoints
 {
@@ -21,129 +9,29 @@ namespace BlackBeam.Services.Identity.Endpoints
         {
             var group = app.MapGroup("/api/auth");
 
-            group.MapPost("/login", async(LoginRequest req, IConfiguration config, AppDbContext db , IHashService hashService) =>
+            group.MapPost("/login", async (LoginRequest req, IAuthService authService) =>
             {
-                if(string.IsNullOrEmpty(req.PhoneNumber) || string.IsNullOrEmpty(req.Password))
+                var result = await authService.LoginAsync(req);
+                if (!result.IsSuccess)
                 {
-                    return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { "رقم الهاتف أو كلمة المرور فارغة" }, "فشل تسجيل الدخول"));
+                    return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { result.ErrorMessage ?? "فشل تسجيل الدخول" }));
                 }
-             
-                var user = await db.UsersDB.FirstOrDefaultAsync(u => u.PhoneNumber == req.PhoneNumber );
-          
-
-                if (user == null)
-                {
-                    return Results.Unauthorized();
-                }
-
-
-                if(!user.IsActive)
-                {
-                    return Results.Unauthorized();
-                }
-
-               var hash = new HashPassword
-                {
-                    Raw = req.Password,
-                    Hash = user.Password
-                };
-                 hashService.VerifyPassword(hash);
-                if (!hash.IsSucceeded)
-                {
-                     return Results.BadRequest(ApiResponse<string>.Failure(new List<string>{"كلمة المرور او رقم الهاتف غير صحيح !"}));
-                }
-
-                try
-                {
-                    string token = GenerateJwtToken(user, config);
-                    return Results.Ok(ApiResponse<string>.Success(token, "تم تسجيل الدخول بنجاح"));
-                }
-                catch (InvalidOperationException)
-                {
-                    return Results.Unauthorized();
-
-                }
+                return Results.Ok(ApiResponse<string>.Success(result.Token!, "تم تسجيل الدخول بنجاح"));
             });
 
-             group.MapPost("/Regist" , async (RegistRequest req  ,IConfiguration config , AppDbContext db, IHashService hashService) =>
-             {
-                 if(string.IsNullOrEmpty(req.PhoneNumber) || string.IsNullOrEmpty(req.Password) || string.IsNullOrEmpty(req.Name))
-                {
-                    return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { " رقم الهاتف أو كلمة المرور فارغة او الاسم فارغ !!" }, "فشل تسجيل الدخول"));
-                }
-                var hash = new HashPassword 
-                {
-                    Raw = req.Password
-                };
-                  hashService.HashPassword(hash);
-                 if (!hash.IsSucceeded)
-                 {
-                      return Results.Unauthorized();
-                 }
-                var user = new ApplicationUser
-                {
-                    Name = req.Name,
-                    PhoneNumber = req.PhoneNumber,
-                    Password = hash.Hash,
-                    Role =  EnumRole.Customer
-                };
-
-                try {
-                await db.UsersDB.AddAsync(user);
-                await db.SaveChangesAsync();
-
-                return Results.Ok(ApiResponse<string>.Success("تم تسجيل المستخدم "));
-                }
-                catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
-                 {
-                     return Results.BadRequest(ApiResponse<string>.Failure(
-                      new List<string> { "البيانات المدخلة غير صالحة أو تخالف شروط النظام." }, 
-                      "فشل في إنشاء الحساب"
-                      ));
-                 }catch (Exception ex)
-                 {
-                     return Results.StatusCode(StatusCodes.Status500InternalServerError);
-                 }
-             
-             });
-          
-        }
-
-    
-
-        private static string GenerateJwtToken(ApplicationUser user, IConfiguration config)
-        { 
-            string? secretKey = config["JwtSettings:Secret"];
-            string? issuer = config["JwtSettings:Issuer"];
-            string? audience = config["JwtSettings:Audience"];
-
-            if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
+            group.MapPost("/Regist", async (RegistRequest req, IAuthService authService) =>
             {
-                throw new InvalidOperationException("المتغيرات فراغة في ملف البيئة !!!");
-            }
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var result = await authService.RegisterCustomerAsync(req);
+                if (!result.IsSuccess)
+                {
+                    return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { result.ErrorMessage ?? "فشل التسجيل" }));
+                }
+                return Results.Ok(ApiResponse<string>.Success("تم تسجيل المستخدم بنجاح"));
+            });
 
-            var claims = new[] {
-                new Claim(JwtRegisteredClaimNames.Sub , user.Id.ToString() ),
-                new Claim(ClaimTypes.MobilePhone , user.PhoneNumber),
-                new Claim(ClaimTypes.Role  , user.Role),
-                new Claim(JwtRegisteredClaimNames.Jti , Guid.NewGuid().ToString())
-            };
-
-            var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                signingCredentials: creds,
-                 claims: claims,
-                 expires: DateTime.UtcNow.AddHours(8));
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            
         }
-
-
-
-    }
-    public record LoginRequest(string PhoneNumber, string Password);
+     public record LoginRequest(string PhoneNumber, string Password);
     public record RegistRequest(string PhoneNumber , string Password   , string Name );
+    }
 }
