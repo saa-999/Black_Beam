@@ -197,4 +197,35 @@ public class InventoryServices : IInventoryServices
 
         return new InventoryResult<IEnumerable<ProductAdminDetailsDto>>(true, products, null);
     }
+
+    public async Task<InventoryResult<bool>> DeductStockAsync(List<DeductStockItem> items)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+               foreach (var item in items)
+                {
+                    var product = await _context.Products.FirstOrDefaultAsync(p => p.Barcode == item.Barcode);
+                    if (product == null)
+                    {
+                        return new InventoryResult<bool>(false, false, $"المنتج بالباركود {item.Barcode} غير موجود");
+                    }
+
+                    if (product.StockQuantity < item.QuantityToDeduct)
+                    {
+                        return new InventoryResult<bool>(false, false, $"الكمية المتاحة للمنتج بالباركود {item.Barcode} غير كافية");
+                    }
+
+                    product.StockQuantity -= item.QuantityToDeduct;
+                }   
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return new InventoryResult<bool>(true, true, "تم خصم الكميات بنجاح");
+            }catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return new InventoryResult<bool>(false, false, $"حدث خطأ أثناء خصم الكميات: {ex.Message}");
+            }
+    }
 }

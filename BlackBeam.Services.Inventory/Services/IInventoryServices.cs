@@ -19,4 +19,5 @@ public interface IInventoryServices
 
     Task<InventoryResult<IEnumerable<ProductAdminDetailsDto>>> GetAdministrativeProductDetailsAsync(PaginationOptions pagination);
 
+    Task<InventoryResult<bool>> DeductStockAsync(List<DeductStockItem> items);
 }

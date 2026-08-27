@@ -114,6 +114,22 @@ public static class EndPointsInventory
              }
              return Results.Ok(ApiResponse<IEnumerable<ProductAdminDetailsDto>>.Success(result.data));
          }).RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+
+         group.MapPut("/DeductStock", async (List<DeductStockItem> items , IInventoryServices services) =>
+         {
+             if(items == null || !items.Any())
+             {
+                return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {"قائمة العناصر فارغة"}));
+             }
+             
+             var result = await services.DeductStockAsync(items);
+
+             if (!result.IsSuccess)
+             {
+                 return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {result.ErrorMessage!}));
+             }
+             return Results.Ok(ApiResponse<bool>.Success(result.data));
+         }).RequireAuthorization(new AuthorizeAttribute { Roles = "Admin,Cashier" });
     }
 }
 
