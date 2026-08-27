@@ -9,5 +9,11 @@ public class InventoryDbContext : DbContext
     {
         
     }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Product>()
+        .HasIndex(p => p.Name).HasAnnotation("MySql:FullTextIndex", true);
+    }
     public DbSet<Product> Products { get; set; }
 }

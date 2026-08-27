@@ -7,8 +7,16 @@ public interface IInventoryServices
     Task<InventoryResult<ProductDisplayDto>> AddProductAsync(AddInventory request);
     
 
-    Task<InventoryResult<IEnumerable<ProductDisplayDto>>> GetAllProductsAsync();
+    Task<InventoryResult<IEnumerable<ProductDisplayDto>>> GetAllProductsAsync(PaginationOptions pagination);
     
     Task<InventoryResult<ProductDisplayDto>> UpdateProductAsync(UpdateInventory request);
+
+    Task<InventoryResult<bool>> DeleteProductAsync(string? barcode);
+
+    Task<InventoryResult<ProductDisplayDto>> GetProductByBarcodeAsync(string barcode);
+
+    Task<InventoryResult<IEnumerable<ProductDisplayDto>>> SearchProductsAsync(string searchTerm);
+
+    Task<InventoryResult<IEnumerable<ProductAdminDetailsDto>>> GetAdministrativeProductDetailsAsync(PaginationOptions pagination);
 
 }

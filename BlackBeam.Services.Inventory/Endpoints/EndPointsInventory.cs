@@ -32,21 +32,23 @@ public static class EndPointsInventory
             return  Results.Ok(ApiResponse<ProductDisplayDto>.Success(result.data));
         }).RequireAuthorization(new AuthorizeAttribute { Roles = "Admin,Cashier" });
 
-       group.MapGet("/View", async (IInventoryServices services ) =>
+       group.MapGet("/View", async (int pageNumber, int pageSize, IInventoryServices services) =>
        {
-          var  result = await services.GetAllProductsAsync();
+           var pagination = new PaginationOptions(pageNumber, pageSize);
+           var result = await services.GetAllProductsAsync(pagination);
            if (!result.IsSuccess)
            {
                return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { result.ErrorMessage ?? "حدث خطأ أثناء جلب المنتجات" }));
            }
            return Results.Ok(ApiResponse<IEnumerable<ProductDisplayDto>>.Success(result.data));
-       }).RequireAuthorization(new  AuthorizeAttribute {Roles = "Admin,Cashier"});
+       });
 
        group.MapPut("/UpdateProduct", async (UpdateInventory request , IInventoryServices services) =>
        {
-           if(string.IsNullOrEmpty(request.name)){
-               return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {"الاسم فارغ"}));
-           }
+           if(string.IsNullOrEmpty(request.name) || string.IsNullOrEmpty(request.Barcode) )
+            {
+                return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {"الاسم او الباركود فارغ"}));
+            }
            
            var result = await services.UpdateProductAsync(request);
 
@@ -57,8 +59,61 @@ public static class EndPointsInventory
            return Results.Ok(ApiResponse<ProductDisplayDto>.Success(result.data));
        }).RequireAuthorization(new AuthorizeAttribute {Roles = "Admin,Cashier"});
 
-       
+       group.MapDelete("/DeleteProduct", async (string? barcode , IInventoryServices services) =>
+       {
+           if(string.IsNullOrEmpty(barcode)){
+               return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {"الباركود فارغ"}));
+           }
+           
+           var result = await services.DeleteProductAsync(barcode);
 
+           if (!result.IsSuccess)
+           {
+               return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {result.ErrorMessage!}));
+           }
+           return Results.Ok(ApiResponse<bool>.Success(result.data));
+       }).RequireAuthorization(new AuthorizeAttribute {Roles = "Admin,Cashier"});
+
+       group.MapGet("/GetProductByBarcode/{barcode}", async (string barcode , IInventoryServices services) =>
+       {
+           if(string.IsNullOrEmpty(barcode)){
+               return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {"الباركود فارغ"}));
+           }
+           
+           var result = await services.GetProductByBarcodeAsync(barcode);
+
+           if (!result.IsSuccess)
+           {
+               return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {result.ErrorMessage!}));
+           }
+           return Results.Ok(ApiResponse<ProductDisplayDto>.Success(result.data));
+       });
+
+         group.MapGet("/SearchProducts", async (string searchTerm , IInventoryServices services) =>
+         {
+              if(string.IsNullOrEmpty(searchTerm)){
+                return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {"كلمة البحث فارغة"}));
+              }
+              
+              var result = await services.SearchProductsAsync(searchTerm);
+    
+              if (!result.IsSuccess)
+              {
+                return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {result.ErrorMessage!}));
+              }
+              return Results.Ok(ApiResponse<IEnumerable<ProductDisplayDto>>.Success(result.data));
+         });
+
+         group.MapGet("/GetAdministrativeProductDetails", async (int pageNumber, int pageSize, IInventoryServices services) =>
+         {
+             var pagination = new PaginationOptions(pageNumber, pageSize);
+             var result = await services.GetAdministrativeProductDetailsAsync(pagination);
+             if (!result.IsSuccess)
+             {
+                 return Results.BadRequest(ApiResponse<string>.Failure(new List<string> { result.ErrorMessage ?? "حدث خطأ أثناء جلب تفاصيل المنتجات" }));
+             }
+             return Results.Ok(ApiResponse<IEnumerable<ProductAdminDetailsDto>>.Success(result.data));
+         }).RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
     }
 }
 
