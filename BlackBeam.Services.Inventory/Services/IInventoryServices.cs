@@ -8,4 +8,7 @@ public interface IInventoryServices
     
 
     Task<InventoryResult<IEnumerable<ProductDisplayDto>>> GetAllProductsAsync();
+    
+    Task<InventoryResult<ProductDisplayDto>> UpdateProductAsync(UpdateInventory request);
+
 }

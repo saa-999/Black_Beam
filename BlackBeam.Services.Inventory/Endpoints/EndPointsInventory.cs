@@ -41,6 +41,24 @@ public static class EndPointsInventory
            }
            return Results.Ok(ApiResponse<IEnumerable<ProductDisplayDto>>.Success(result.data));
        }).RequireAuthorization(new  AuthorizeAttribute {Roles = "Admin,Cashier"});
+
+       group.MapPut("/UpdateProduct", async (UpdateInventory request , IInventoryServices services) =>
+       {
+           if(string.IsNullOrEmpty(request.name)){
+               return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {"الاسم فارغ"}));
+           }
+           
+           var result = await services.UpdateProductAsync(request);
+
+           if (!result.IsSuccess)
+           {
+               return Results.BadRequest(ApiResponse<string>.Failure(new List<string> {result.ErrorMessage!}));
+           }
+           return Results.Ok(ApiResponse<ProductDisplayDto>.Success(result.data));
+       }).RequireAuthorization(new AuthorizeAttribute {Roles = "Admin,Cashier"});
+
+       
+
     }
 }
 

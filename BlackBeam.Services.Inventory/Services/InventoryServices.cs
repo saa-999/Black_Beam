@@ -20,7 +20,7 @@ public class InventoryServices : IInventoryServices
             var exists = await _context.Products.AnyAsync(p => p.Barcode == request.Barcode);
             if (exists)
             {
-                return new InventoryResult<ProductDisplayDto>(false, default!, "المنتج بهذا الباركود موجود مسبقاً!");
+                return new InventoryResult<ProductDisplayDto>(false, default!, "المنتج هذا الباركود موجود مسبقاً!");
             }
         }
 
@@ -63,6 +63,41 @@ public class InventoryServices : IInventoryServices
             .ToListAsync();
 
         return new InventoryResult<IEnumerable<ProductDisplayDto>>(true, products, null);
+    }
+
+    public async Task<InventoryResult<ProductDisplayDto>> UpdateProductAsync(UpdateInventory request)
+    {
+        if (string.IsNullOrEmpty(request.Barcode))
+        {
+            return new InventoryResult<ProductDisplayDto>(false, default!, 
+            "الباركود فارغ!!");
+        }
+
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Barcode == request.Barcode);
+
+        if(product == null)
+        {
+             return new InventoryResult<ProductDisplayDto>(false , default! ,
+              "الباركود غير موجود!!");
+        }
+
+        product.Name = request.name;
+        product.Price = request.price;
+        product.StockQuantity = request.StockQuantity;
+        product.ImageUrl = request.ImageUrl;
+        product.IsActive = request.IsActive;
+
+        await _context.SaveChangesAsync();
+
+        var dto = new ProductDisplayDto {
+        Name = product.Name,
+        ImageUrl = product.ImageUrl,
+        Price = product.Price,
+        Barcode = product.Barcode,
+        StockQuantity = product.StockQuantity
+    };
+
+        return new  InventoryResult<ProductDisplayDto>(true , dto , "تم علمية التعديل بنجاح");
     }
 
 }
