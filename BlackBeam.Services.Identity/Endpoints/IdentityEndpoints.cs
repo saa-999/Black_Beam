@@ -49,9 +49,9 @@ namespace BlackBeam.Services.Identity.Endpoints
             }) .RequireAuthorization("AdminOnly");
 
             
-            group.MapGet("/admin/employees", async (int pageNumber, int pageSize, IAuthService authService) =>
+            group.MapGet("/admin/employees", async (int? pageNumber, int? pageSize, IAuthService authService) =>
             {
-                var result = await authService.GetAllEmployeesAsync(pageNumber, pageSize);
+                var result = await authService.GetAllEmployeesAsync(pageNumber ?? 1 ,pageSize ?? 10 );
                 if (!result.IsSuccess)
                 {
                     return Results.BadRequest(ApiResponse<IEnumerable<EmployeeDto>>.Failure(new List<string> { result.ErrorMessage ?? "فشل في جلب الموظفين" }));
