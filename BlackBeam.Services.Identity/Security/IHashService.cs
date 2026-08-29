@@ -2,7 +2,7 @@ namespace BlackBeam.Services.Identity.Security
 {
     public interface IHashService
     {
-        public void HashPassword(HashPassword ctx);
-        public void VerifyPassword(HashPassword ctx);
+        public string HashPassword(string password);
+        public bool VerifyPassword(string password, string hash);
     }
 }

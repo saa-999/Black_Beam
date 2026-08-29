@@ -8,27 +8,24 @@ namespace BlackBeam.Services.Identity.Security
 {
     public class HashService : IHashService
 {
-    public void  HashPassword(HashPassword ctx)
+    public string   HashPassword(string password)
     {
-        if (string.IsNullOrEmpty(ctx.Raw))
+        if (string.IsNullOrEmpty(password))
         {
-            ctx.IsSucceeded = false;
-            return;
+            return string.Empty;
         }
 
-        ctx.Hash = BCrypt.Net.BCrypt.HashPassword(ctx.Raw);
-        ctx.IsSucceeded = true;
+        return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
-    public void  VerifyPassword(HashPassword ctx)
+    public bool  VerifyPassword(string password, string hash)
     {
-        if (string.IsNullOrEmpty(ctx.Raw) || string.IsNullOrEmpty(ctx.Hash))
+        if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
         {
-            ctx.IsSucceeded = false;
-            return;
+            return false;
         }
 
-        ctx.IsSucceeded = BCrypt.Net.BCrypt.Verify(ctx.Raw, ctx.Hash);
+        return BCrypt.Net.BCrypt.Verify(password, hash);
     }
 }
 }

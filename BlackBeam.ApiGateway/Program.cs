@@ -53,6 +53,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAuth", policy => policy.RequireAuthenticatedUser());
 });
 
+
+
 var app = builder.Build();
 
 app.UseCors("AllowAll");
