@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BlackBeam.Services.Inventory.Endpoints;
+using BlackBeam.Shared.EnumRole;
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,8 +34,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(opt =>
+{
+    opt.AddPolicy("Admin", policy =>
+    {
+        policy.RequireRole(EnumRole.Admin);
+    });
+});
 
+builder.Services.AddAuthorization(opt =>
+{
+   opt.AddPolicy("StaffOnly", policy =>
+   {
+      policy.RequireRole(EnumRole.Admin,EnumRole.Cashier); 
+   });
+});
 
 
 builder.Services.AddScoped<IInventoryServices, InventoryServices>();
