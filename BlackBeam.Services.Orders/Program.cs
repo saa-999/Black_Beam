@@ -4,6 +4,7 @@ using DotNetEnv;
 using Stripe;
 using BlackBeam.Services.Orders.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using BlackBeam.Shared.EnumRole;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -35,7 +36,7 @@ builder.Services.AddAuthentication(opt =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         ValidateIssuer = true,
         ValidIssuer = jwtIssuer,
-        ValidateAudience = true,
+        ValidateAudience = false,
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
@@ -57,8 +58,12 @@ builder.Services.AddAuthentication(opt =>
     };
 });
 
-
-
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CashierOnly", policy => policy.RequireRole(EnumRole.Cashier));
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole(EnumRole.Admin));
+    options.AddPolicy("CashierOrAdmin", policy => policy.RequireRole(EnumRole.Cashier, EnumRole.Admin));
+});
 
 builder.Services.AddDbContext<OrderDbContext>(opt =>
 {
@@ -72,6 +77,7 @@ builder.Services.AddHttpClient("InventoryClient", client =>
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<OrderTrackingManager>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddHttpContextAccessor();
 
 
@@ -79,5 +85,6 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHub<CashierHub>("/CashierHub");
+app.MapOrderEndpoints();
 
 app.Run();

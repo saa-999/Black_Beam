@@ -37,5 +37,6 @@ public class OrderDbContext : DbContext
         modelBuilder.Entity<Order>()
         .Property(o => o.status)
         .HasConversion<string>();
+        
     }
 }
