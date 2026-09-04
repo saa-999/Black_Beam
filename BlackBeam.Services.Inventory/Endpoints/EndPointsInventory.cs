@@ -101,7 +101,7 @@ public static class EndPointsInventory
                 return Results.BadRequest(ApiResponse<string>.Failure([result.ErrorMessage ?? "حدث خطاء"]));
               }
               return Results.Ok(ApiResponse<IEnumerable<ProductDisplayDto>>.Success(result.data));
-         });
+         }).RequireAuthorization();
 
          group.MapGet("/GetAdministrativeProductDetails", async (int? pageNumber, int? pageSize, IInventoryServices services) =>
          {
@@ -129,6 +129,15 @@ public static class EndPointsInventory
              }
              return Results.Ok(ApiResponse<bool>.Success(result.data));
          }).RequireAuthorization("StaffOnly");
+
+        group.MapGet("/api/Inventory/Get-Price", async (string barcode, IInventoryServices services) =>
+        {
+            var price = await services.GetPrice(barcode);
+
+            return price.IsSuccess
+                ? Results.Ok(price)
+                : Results.BadRequest(price);
+        }).RequireAuthorization();
     }
 }
 

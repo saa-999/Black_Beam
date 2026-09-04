@@ -230,4 +230,22 @@ public class InventoryServices : IInventoryServices
             return new InventoryResult<bool>(false, false, $"حدث خطأ أثناء خصم الكميات: {ex.Message}");
         }
     }
+
+    public async Task<InventoryResult<decimal>> GetPrice(string barcode)
+    {
+        if (string.IsNullOrEmpty(barcode))
+        {
+            return new InventoryResult<decimal>(false, 0 , "الباركود فارغ");
+        }
+        var product = await _context.Products
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Barcode == barcode);
+
+        if(product is null || !product.IsActive)
+        {
+            return new InventoryResult<decimal>(false, 0, "المنتج غير موجود");
+        }
+
+        return new InventoryResult<decimal>(true, product.Price , "");
+    }
 }
