@@ -15,7 +15,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
-
+using System;
 namespace BlackBeam.Services.Orders.Services;
 
 public class OrderService : IOrderService
@@ -41,19 +41,37 @@ public class OrderService : IOrderService
             return ApiResponse<Guid>.Failure([$"طريقة الدفع غير معرفه {request.PaymentMethod}"]);
         }
 
+        var priceTasks = request.Items.Select(i => GetUintPrice(i.Barcode)).ToList();
+        var priceResults = await Task.WhenAll(priceTasks);
+
+        if(priceResults.Any(r => !r.IsSuccess))
+        {
+            var errors = priceResults.Where(r => !r.IsSuccess).SelectMany(r => r.Error!);
+            return ApiResponse<Guid>.Failure(errors.ToList());
+        }
+
+        var orderItemsWithTotals = request.Items.Zip(priceResults, (item, priceResult) => new
+        {
+            Item = item,
+            UnitPrice = priceResult.Data,
+            SubTotal = priceResult.Data * item.Quantity   
+        }).ToList();
+
+        decimal totalAmount = orderItemsWithTotals.Sum(x => x.SubTotal);
+
 
         var order = new Order
         {
             CashierId = request.CashierId,
             PaymentMethod = request.PaymentMethod,
-            TotalAmount = request.Items.Sum(i => i.UnitPrice * i.Quantity),
+            TotalAmount = totalAmount,
             OrderItems = request.Items.Select(i => new OrderItem
             {
                 ProductBarcode = i.Barcode,
                 ProductName = i.ProductName,
-                UnitPrice = i.UnitPrice,
                 Quantity = i.Quantity,
-                SubTotal = i.UnitPrice * i.Quantity
+                SubTotal = totalAmount,
+                UnitPrice = totalAmount
             }).ToList(),
             status = Enum.EnumOrderStatus.Completed,
             IsPaid = request.IsPaid
@@ -79,18 +97,35 @@ public class OrderService : IOrderService
         {
             return ApiResponse<string>.Failure([$"طريقة الدفع غير معرفه {request.PaymentMethod}"]);
         }
+        var priceTask = request.Items.Select(i => GetUintPrice(i.Barcode));
+        var priceResults = await Task.WhenAll(priceTask);
+
+        if(priceResults.Any(r => !r.IsSuccess))
+        {
+            var errors = priceResults.Where(r => !r.IsSuccess).SelectMany(r => r.Error!);
+            return ApiResponse<string>.Failure(errors.ToList());
+        }
+
+        var orderItemsWithTotals = request.Items.Zip(priceResults, (item, priceResult) => new
+        {
+            Item = item,
+            UnitPrice = priceResult.Data,
+            SubTotal = priceResult.Data * item.Quantity
+        }).ToList();
+
+        decimal totalAmount = orderItemsWithTotals.Sum(x => x.SubTotal);
 
         var order = new Order
         {
             PaymentMethod = request.PaymentMethod,
-            TotalAmount = request.Items.Sum(i => i.UnitPrice * i.Quantity),
+            TotalAmount = totalAmount,
             OrderItems = request.Items.Select(i => new OrderItem
             {
                 ProductBarcode = i.Barcode,
                 ProductName = i.ProductName,
-                UnitPrice = i.UnitPrice,
+                UnitPrice = totalAmount,
                 Quantity = i.Quantity,
-                SubTotal = i.UnitPrice * i.Quantity
+                SubTotal = totalAmount
             }).ToList(),
             status = Enum.EnumOrderStatus.Pending,
             IsPaid = false
@@ -305,6 +340,35 @@ public class OrderService : IOrderService
 
         return ApiResponse<IEnumerable<OrderResults>>.Success(order);
     }
+    private async Task<ApiResponse<decimal>> GetUintPrice(string barcode)
+    {
+        string cleanBarcode = barcode.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(cleanBarcode))
+            return ApiResponse<decimal>.Failure(["الباركود فارغ"]);
+
+        string? authHeader = _httpContextAccessor.HttpContext?.Request.Headers.Authorization;
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            return ApiResponse<decimal>.Failure(["حدث خطأ في المصادقة: الـ Token غير موجود"]);
+
+        string jwtToken = authHeader.Substring(7);
+
+        var request = new HttpRequestMessage(HttpMethod.Get,
+        $"api/Inventory/Get-Price?barcode={Uri.EscapeDataString(cleanBarcode)}");
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+        var response = await _httpClient.SendAsync(request);
+
+        if(!response.IsSuccessStatusCode)
+            return ApiResponse<decimal>.Failure(["فشل الاتصال بخدمة المخزون"]);
+
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<decimal>>();
+        if(result is null)
+            return ApiResponse<decimal>.Failure(["تعذر قراءة الاستجابة من خدمة المخزون"]);
+
+        return result;
+    }
+
+
     private async Task<ApiResponse<bool>> DeductInventoryStockAsync(Order order)
     {
         string? authHeader = _httpContextAccessor.HttpContext?.Request.Headers.Authorization;
