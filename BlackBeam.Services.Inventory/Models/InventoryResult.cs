@@ -9,4 +9,4 @@ public record UpdateInventory(string? name , string? Barcode
 
 public record PaginationOptions(int pageNumber = 1, int pageSize = 20);
 
-public record DeductStockItem(string Barcode, int QuantityToDeduct);
+public record DeductStockItem(string Barcode, int Quantity);
