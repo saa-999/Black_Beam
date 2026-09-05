@@ -9,6 +9,7 @@ public class Order
     public EnumOrderStatus status {get; set;} = EnumOrderStatus.Pending;
     public DateTime OrderDate {get; set;} = DateTime.UtcNow;
     public string PaymentMethod {get; set;} = EnumPayMethod.Cash;
+    public LoyaltyOperationType? OperationType {get; set;} = null;
     public bool IsPaid {get; set;} = false;
     public ICollection<OrderItem> OrderItems {get; set;} =  [];
 }

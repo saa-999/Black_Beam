@@ -16,6 +16,7 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 namespace BlackBeam.Services.Orders.Services;
 
 public class OrderService : IOrderService
@@ -41,6 +42,23 @@ public class OrderService : IOrderService
             return ApiResponse<Guid>.Failure([$"طريقة الدفع غير معرفه {request.PaymentMethod}"]);
         }
 
+        var cleanPhoneNumber = request.PhoneNumber?.Trim() ?? string.Empty;
+
+        // Protection against invoice and payment method tampering.
+        if (request.PaymentMethod == EnumPayMethod.Point)
+        {
+            if (request.OperationType != LoyaltyOperationType.Redeem)
+                return ApiResponse<Guid>.Failure(["العمليه  مرفوضه"]);
+
+            if(string.IsNullOrEmpty(cleanPhoneNumber))
+                return ApiResponse<Guid>.Failure(["عملية مرفوضة: لا يمكن الدفع بالنقاط بدون رقم هاتف مسجل."]);
+        }
+        else
+        {
+            if (request.OperationType == LoyaltyOperationType.Redeem)
+                return ApiResponse<Guid>.Failure(["عملية مرفوضه"]);
+        }
+
         var priceTasks = request.Items.Select(i => GetUintPrice(i.Barcode)).ToList();
         var priceResults = await Task.WhenAll(priceTasks);
 
@@ -52,9 +70,11 @@ public class OrderService : IOrderService
 
         var orderItemsWithTotals = request.Items.Zip(priceResults, (item, priceResult) => new
         {
-            Item = item,
+            Barcode = item.Barcode,
+            Name = item.ProductName,
+            Quantity = item.Quantity,
             UnitPrice = priceResult.Data,
-            SubTotal = priceResult.Data * item.Quantity   
+            SubTotal = priceResult.Data * item.Quantity
         }).ToList();
 
         decimal totalAmount = orderItemsWithTotals.Sum(x => x.SubTotal);
@@ -65,16 +85,17 @@ public class OrderService : IOrderService
             CashierId = request.CashierId,
             PaymentMethod = request.PaymentMethod,
             TotalAmount = totalAmount,
-            OrderItems = request.Items.Select(i => new OrderItem
+            OrderItems = orderItemsWithTotals.Select(i => new OrderItem
             {
                 ProductBarcode = i.Barcode,
-                ProductName = i.ProductName,
+                ProductName = i.Name,
                 Quantity = i.Quantity,
-                SubTotal = totalAmount,
-                UnitPrice = totalAmount
+                SubTotal = i.SubTotal,
+                UnitPrice = i.UnitPrice
             }).ToList(),
             status = Enum.EnumOrderStatus.Completed,
-            IsPaid = request.IsPaid
+            IsPaid = request.IsPaid,
+            OperationType = request.OperationType
         };
 
         _db.order.Add(order);
@@ -83,11 +104,31 @@ public class OrderService : IOrderService
         var deductResult = await DeductInventoryStockAsync(order);
         if (!deductResult.IsSuccess)
         {
-            _db.order.Remove(order);
+            order.status = EnumOrderStatus.Failed;
+            _db.order.Update(order);
             await _db.SaveChangesAsync();
             return ApiResponse<Guid>.Failure(deductResult.Error);
         }
 
+        if(order.OperationType.HasValue && !string.IsNullOrEmpty(cleanPhoneNumber))
+        {
+            var dto = new LoyaltyPaymentRequestDto
+            {
+                Operation = order.OperationType.Value,
+                OrderId = order.Id,
+                PhoneNumber = cleanPhoneNumber,
+                Price = totalAmount
+            };
+
+            var result = await PayWithLoyaltyPointsAsync(dto);
+            if (!result.IsSuccess)
+            {
+                order.status = EnumOrderStatus.Failed;
+                _db.order.Update(order);
+                await _db.SaveChangesAsync();
+                return ApiResponse<Guid>.Failure(result.Error ?? ["فشلت عملية الولاء، تم إلغاء الطلب."]);
+            }
+        }
         return ApiResponse<Guid>.Success(order.Id);
     }
 
@@ -367,8 +408,51 @@ public class OrderService : IOrderService
 
         return result;
     }
+ 
+    private async Task<ApiResponse<bool>> PayWithLoyaltyPointsAsync(LoyaltyPaymentRequestDto paymentReq)
+    {
+        string? cleanPhoneNumber = paymentReq.PhoneNumber?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(cleanPhoneNumber))
+            return ApiResponse<bool>.Failure(["رقم الهاتف غير صحيح"]);
+
+        string? authHeader = _httpContextAccessor.HttpContext?.Request.Headers.Authorization;
+        if (string.IsNullOrEmpty(authHeader))
+            return ApiResponse<bool>.Failure(["حدث خطأ في المصادقة: الـ Token غير موجود"]);
+
+        string jwtToken = authHeader.Substring(7);
+        string? endpoint = paymentReq.Operation switch
+        {
+            LoyaltyOperationType.Earn => "api/Loyalty/Earn",
+            LoyaltyOperationType.Redeem => "api/Loyalty/Redeem",
+            _ => null
+        };
+        if(endpoint == null)
+        {
+            return ApiResponse<bool>.Failure(["نوع العملية غير صالح. يجب أن يكون اكتساب أو خصم."]);
+        }
+       
+        Object paylod = paymentReq.Operation == LoyaltyOperationType.Earn
+            ? new { PhoneNumber = cleanPhoneNumber, MonetaryValue = paymentReq.Price, OrderId = paymentReq.OrderId }
+            : new { PhoneNumber = cleanPhoneNumber, AmountToPay = paymentReq.Price, OrderId = paymentReq.OrderId };
+
+        var req = new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = JsonContent.Create(paylod)
+        };
+
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
 
+        var response = await _httpClient.SendAsync(req);
+        var content = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+        if (content == null || !content.IsSuccess)
+            return ApiResponse<bool>.Failure(content?.Error ?? ["حدث خطأ أثناء معالجة نقاط الولاء."]);
+        
+        if (!response.IsSuccessStatusCode)
+            return ApiResponse<bool>.Failure(["حدث خطاء في الخادم"]);
+
+        return ApiResponse<bool>.Success(true);
+    }
     private async Task<ApiResponse<bool>> DeductInventoryStockAsync(Order order)
     {
         string? authHeader = _httpContextAccessor.HttpContext?.Request.Headers.Authorization;

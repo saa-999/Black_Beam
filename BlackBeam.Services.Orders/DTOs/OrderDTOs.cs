@@ -1,7 +1,9 @@
 using BlackBeam.Shared;
+using BlackBeam.Services.Orders.Enum;
 namespace BlackBeam.Services.Orders.DTOs;
 
-public record CreateOrderRequest(string? CashierId, string PaymentMethod, List<OrderItemDto> Items, bool IsPaid);
+public record CreateOrderRequest(string? CashierId, string PaymentMethod, List<OrderItemDto> Items, 
+    bool IsPaid , LoyaltyOperationType? OperationType , string? PhoneNumber);
 /**
  fix: i remov UnitPrice because security reasons , we don't want to expose the unit price to the client side
       we will get the unit price from the Inventory service when we create the order, and we will calculate the total price based on the unit price and quantity
