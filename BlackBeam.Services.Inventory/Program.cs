@@ -29,7 +29,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = "BlackBeamClients",
+            ValidateAudience = false,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!))
         };
     });
@@ -40,16 +40,11 @@ builder.Services.AddAuthorization(opt =>
     {
         policy.RequireRole(EnumRole.Admin);
     });
+    opt.AddPolicy("StaffOnly", policy =>
+    {
+        policy.RequireRole(EnumRole.Admin, EnumRole.Cashier);
+    });
 });
-
-builder.Services.AddAuthorization(opt =>
-{
-   opt.AddPolicy("StaffOnly", policy =>
-   {
-      policy.RequireRole(EnumRole.Admin,EnumRole.Cashier); 
-   });
-});
-
 
 builder.Services.AddScoped<IInventoryServices, InventoryServices>();
 var app = builder.Build();

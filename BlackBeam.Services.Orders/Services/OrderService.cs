@@ -22,7 +22,8 @@ namespace BlackBeam.Services.Orders.Services;
 public class OrderService : IOrderService
 {
     private readonly OrderDbContext _db;
-    private readonly HttpClient _httpClient;
+    private readonly HttpClient _inventoryClient;
+    private readonly HttpClient _loyaltyClient;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IHubContext<CashierHub> _hubContext;
     private readonly OrderTrackingManager _tracker;
@@ -30,7 +31,8 @@ public class OrderService : IOrderService
     public OrderService(IHttpClientFactory httpClientFactory, OrderDbContext db, IHttpContextAccessor httpContextAccessor, IHubContext<CashierHub> hubContext, OrderTrackingManager tracker)
     {
         _db = db;
-        _httpClient = httpClientFactory.CreateClient("InventoryClient");
+        _inventoryClient = httpClientFactory.CreateClient("InventoryClient");
+        _loyaltyClient = httpClientFactory.CreateClient("LoyaltyClient");
         _httpContextAccessor = httpContextAccessor;
         _hubContext = hubContext;
         _tracker = tracker;
@@ -138,6 +140,20 @@ public class OrderService : IOrderService
         {
             return ApiResponse<string>.Failure([$"طريقة الدفع غير معرفه {request.PaymentMethod}"]);
         }
+        string cleanPhoneNumber = request.PhoneNumber?.Trim() ?? string.Empty;
+        if(request.PaymentMethod == EnumPayMethod.Point) 
+        { 
+            if(request.OperationType != LoyaltyOperationType.Redeem)
+                return ApiResponse<string>.Failure(["عملية غير صحيحه"]);
+
+            if (string.IsNullOrEmpty(cleanPhoneNumber))
+                return ApiResponse<string>.Failure(["رقم الجوال مطلوب "]);
+        }
+        else
+        {
+            if (request.OperationType == LoyaltyOperationType.Redeem)
+                return ApiResponse<string>.Failure(["عملية غير صحيحه"]);
+        }
         var priceTask = request.Items.Select(i => GetUintPrice(i.Barcode));
         var priceResults = await Task.WhenAll(priceTask);
 
@@ -160,13 +176,13 @@ public class OrderService : IOrderService
         {
             PaymentMethod = request.PaymentMethod,
             TotalAmount = totalAmount,
-            OrderItems = request.Items.Select(i => new OrderItem
+            OrderItems = orderItemsWithTotals.Select(i => new OrderItem
             {
-                ProductBarcode = i.Barcode,
-                ProductName = i.ProductName,
-                UnitPrice = totalAmount,
-                Quantity = i.Quantity,
-                SubTotal = totalAmount
+                ProductBarcode = i.Item.Barcode,
+                ProductName = i.Item.ProductName,
+                UnitPrice = i.UnitPrice,
+                Quantity = i.Item.Quantity,
+                SubTotal = i.SubTotal
             }).ToList(),
             status = Enum.EnumOrderStatus.Pending,
             IsPaid = false
@@ -397,7 +413,7 @@ public class OrderService : IOrderService
         $"api/Inventory/Get-Price?barcode={Uri.EscapeDataString(cleanBarcode)}");
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
-        var response = await _httpClient.SendAsync(request);
+        var response = await _inventoryClient.SendAsync(request);
 
         if(!response.IsSuccessStatusCode)
             return ApiResponse<decimal>.Failure(["فشل الاتصال بخدمة المخزون"]);
@@ -443,7 +459,7 @@ public class OrderService : IOrderService
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
 
-        var response = await _httpClient.SendAsync(req);
+        var response = await _loyaltyClient.SendAsync(req);
         var content = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
         if (content == null || !content.IsSuccess)
             return ApiResponse<bool>.Failure(content?.Error ?? ["حدث خطأ أثناء معالجة نقاط الولاء."]);
@@ -476,24 +492,17 @@ public class OrderService : IOrderService
             Barcode = i.ProductBarcode,
             Quantity = i.Quantity
         }).ToList();
-        // I will move the http://Localhost:5275 to Program.cs file and use it as a configuration value, but for now, I will keep it here.
-        string endpoint = "http://localhost:5275/api/Inventory/DeductStock";
-        var request = new HttpRequestMessage(HttpMethod.Put, endpoint)
+        var request = new HttpRequestMessage(HttpMethod.Put, "api/Inventory/DeductStock")
         {
             Content = JsonContent.Create(payload)
         };
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
-        var response = await _httpClient.SendAsync(request);
+        var response = await _inventoryClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
-            /*
-             i will fix error for read from json async in the future, but for now, i will return a generic error message
-             */
-
-            //var errorData = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
-            //errorData?.Error ??
-            return ApiResponse<bool>.Failure( ["فشل الاتصال بخدمة المخزون"]);
+            var errorData = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+            return ApiResponse<bool>.Failure(errorData?.Error ?? ["فشل الاتصال بخدمة المخزون"]);
         }
         return ApiResponse<bool>.Success(true);
     }
