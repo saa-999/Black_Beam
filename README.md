@@ -132,4 +132,4 @@ We welcome community contributions! Please review our [Contributing Guidelines](
 
 ## License
 
-*(Note: No LICENSE file has been chosen yet. Please consult with the project owners to determine the appropriate open-source license.)*
+[srdv LICENSE](LICENSE)
