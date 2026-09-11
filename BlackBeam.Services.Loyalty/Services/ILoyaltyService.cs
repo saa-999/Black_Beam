@@ -1,4 +1,4 @@
-﻿using BlackBeam.Shared.Responses;
+using BlackBeam.Shared.Responses;
 using BlackBeam.Services.Loyalty.DTOs;
 namespace BlackBeam.Services.Loyalty.Services
 {
@@ -6,5 +6,6 @@ namespace BlackBeam.Services.Loyalty.Services
     {
         Task<ApiResponse<bool>> EarnPointsAsync(EarnPointsDto request);
         Task<ApiResponse<bool>> RedeemPointsAsync(RedeemPointsDto request);
+        Task<ApiResponse<PointDto>> GetLoyaltyPointAndTier(string phoneNumber);
     }
 }

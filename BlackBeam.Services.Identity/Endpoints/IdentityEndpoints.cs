@@ -1,4 +1,4 @@
-﻿using BlackBeam.Services.Identity.Services;
+using BlackBeam.Services.Identity.Services;
 using BlackBeam.Shared.Responses;
 using BlackBeam.Services.Identity.Models;
 using BlackBeam.Services.Identity.Entities;
@@ -92,6 +92,21 @@ namespace BlackBeam.Services.Identity.Endpoints
                 if(!result.IsSuccess) return Results.BadRequest(ApiResponse<string>.Failure([result.ErrorMessage ?? "لم تتم العملية"]));
                 return Results.Ok(ApiResponse<string>.Success(result.Data ));
             }).RequireAuthorization("AdminOnly");
+
+            group.MapGet("/GetPhoneNumber", async (string phoneNumber, AppDbContext db) =>
+            {
+                if (string.IsNullOrWhiteSpace(phoneNumber))
+                    return Results.BadRequest(ApiResponse<bool>.Failure(["رقم الهاتف مطلوب"]));
+
+                var exists = await db.UsersDB
+                    .AsNoTracking()
+                    .AnyAsync(u => u.PhoneNumber == phoneNumber.Trim() && u.IsActive);
+
+                if (!exists)
+                    return Results.NotFound(ApiResponse<bool>.Failure(["رقم الهاتف غير مسجل أو الحساب غير نشط"]));
+
+                return Results.Ok(ApiResponse<bool>.Success(true, "رقم الهاتف مسجل ونشط"));
+            }).RequireAuthorization();
         }
     }
 }
