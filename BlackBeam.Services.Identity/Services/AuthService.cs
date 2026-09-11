@@ -316,7 +316,6 @@ namespace BlackBeam.Services.Identity.Services
             if (user == null) return new AuthResult<string>(false, null, "رقم الهاتف غير صحيح !1");
 
             user.IsActive = false;
-            await _db.SaveChangesAsync();
 
             return new AuthResult<string>(true, "تم تعطيل المستخدم", null);
         }

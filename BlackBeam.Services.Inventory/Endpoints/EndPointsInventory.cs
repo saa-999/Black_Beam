@@ -130,13 +130,13 @@ public static class EndPointsInventory
              return Results.Ok(ApiResponse<bool>.Success(result.data));
          }).RequireAuthorization("StaffOnly");
 
-        group.MapGet("/Get-Price", async (string barcode, IInventoryServices services) =>
+        group.MapGet("/api/Inventory/Get-Price", async (string barcode, IInventoryServices services) =>
         {
             var price = await services.GetPrice(barcode);
 
             return price.IsSuccess
-                ? Results.Ok(ApiResponse<decimal>.Success(price.data))
-                : Results.BadRequest(ApiResponse<string>.Failure([price.ErrorMessage ?? "حدث خطأ"]));
+                ? Results.Ok(price)
+                : Results.BadRequest(price);
         }).RequireAuthorization();
     }
 }

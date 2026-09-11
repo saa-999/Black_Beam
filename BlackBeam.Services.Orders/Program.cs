@@ -72,12 +72,7 @@ builder.Services.AddDbContext<OrderDbContext>(opt =>
 
 builder.Services.AddHttpClient("InventoryClient", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5275");
-});
-
-builder.Services.AddHttpClient("LoyaltyClient", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5236");
+    client.BaseAddress = new Uri("http://localhost:5123");
 });
 
 builder.Services.AddSignalR();

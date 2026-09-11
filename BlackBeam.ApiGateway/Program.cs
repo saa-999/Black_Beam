@@ -28,11 +28,11 @@ builder.Services.AddCors(opt =>
 
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter("loginPolicy", opt =>
-    {
-        opt.Window = TimeSpan.FromSeconds(10);
-        opt.PermitLimit = 5;
-    });
+   options.AddFixedWindowLimiter("LoginPolicy", opt => 
+   {
+      opt.Window = TimeSpan.FromMinutes(1);
+      opt.PermitLimit = 5;  
+   });
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

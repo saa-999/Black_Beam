@@ -1,25 +1,6 @@
-# Environment Variables
-.env
-.env.local
-.env.*
-!.env.example
-
-# Visual Studio / IDEs
+﻿.env
 .vs/
-.idea/
-.vscode/
-*.user
-*.suo
-*.slnx.user
-
-# Build and Publish
 [Bb]in/
 [Oo]bj/
 **/bin/
 **/obj/
-TestResults/
-*.publishxml
-
-# OS Files
-.DS_Store
-Thumbs.db

@@ -16,8 +16,8 @@ public static class MapOrder
         {
             var result = await orderService.CreateOrderAsync(request);
             return result.IsSuccess
-            ? Results.Ok(result)
-            : Results.BadRequest(result);
+            ? Results.Ok(result.Data)
+            : Results.BadRequest(result.Error);
         }).RequireAuthorization("CashierOrAdmin");
 
         orderGroup.MapPost("/create-customer-order", async (CreateOrderRequest request, IOrderService orderService) =>
@@ -42,7 +42,7 @@ public static class MapOrder
             var allOrder = await orderService.GetAllOrderAsync(PageNumper ?? 1, PageSize ?? 10);
 
             return allOrder.IsSuccess
-            ? Results.Ok(allOrder)
+            ? Results.Ok(allOrder.Data)
             : Results.BadRequest(allOrder);
         }).RequireAuthorization("CashierOrAdmin");
 
@@ -53,7 +53,7 @@ public static class MapOrder
             return result.IsSuccess
             ? Results.Ok(result)
             : Results.BadRequest(result);
-        }).RequireAuthorization("CashierOrAdmin");
+        });
 
         orderGroup.MapPost("/webhook", async (HttpContext context, IOrderService orderService, IConfiguration config) =>
        {
